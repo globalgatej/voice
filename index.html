@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+
+
+
+    <style>
+        body {
+            font-family: "Helvetica Neue",
+                Arial,
+                "Hiragino Kaku Gothic ProN",
+                "Hiragino Sans",
+                Meiryo,
+                sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="bg-light py-5">
+            <div class="container">
+                <h1 class="fw-bold">ブラウザの音声合成機能を使ってみよう</h1>
+                <div class="lead">
+                    Web Speech APIのサンプル
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row py-4">
+                <div class="col text-center">
+                    <button class="btn btn-secondary" @click="inputSample">
+                        サンプルの会話を反映
+                    </button>
+                </div>
+            </div>
+
+            <div class="row my-3" v-for="(item,index) in voice">
+                <div class="col-12 col-sm-8">
+
+                    <textarea class="form-control h-100" v-model="item.text" placeholder="読み上げるテキストを入力">
+                </textarea>
+                </div>
+                <div class="col mt-3 mt-sm-0">
+                    <div>
+                        <label :for="'rate-' + index"><i class="bi bi-speedometer2"></i>
+                            速さ</label>
+                        <input type="range" max="10" min="0.1" step="0.1" class="form-range" :id="'rate-' + index"
+                            v-model="item.rate">
+                    </div>
+                    <div class="mt-3">
+                        <label :for="'pitch-' + index"><i class="bi bi-arrows-expand"></i>
+                            声の高さ</label>
+                        <input type="range" max="2" min="0" step="0.1" class="form-range" :id="'pitch-' + index"
+                            v-model="item.pitch">
+                    </div>
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <button class="btn btn-light  w-100" @click="up(index)">
+                                    <i class="bi bi-arrow-up-square-fill"></i>
+                                    前へ
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-light w-100" @click="down(index)">
+                                    <i class="bi bi-arrow-down-square-fill"></i>
+                                    後ろへ
+                                </button>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <button class="btn btn-light w-100" @click="del(index)">
+                                    <i class="bi bi-x-square-fill"></i>
+                                    削除
+                                </button>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <button class="btn btn-light w-100" @click="add">
+                                    <i class="bi bi-plus-square-fill"></i>
+                                    追加
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row py-4">
+                <div class="col text-center">
+                    <button class="btn btn-primary" @click="play" :disabled="playing">
+                        <i class="bi bi-play-circle-fill"></i>
+                        喋らせる
+                    </button>
+                    <div class="text-danger fw-bold mt-2">
+
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        （注意！音が出ます！）
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    voice: [],
+                    playing: false
+                }
+            },
+            mounted() {
+                this.sampleVoice = [{
+                        text: 'どうもー、ゆっくりれいむでーす',
+                        lang: 'ja-JP',
+                        rate: 1,
+                        pitch: 1,
+                        volume: 1
+                    },
+                    {
+                        text: 'はーい、ゆっくりまりさだぜー',
+                        lang: 'ja-JP',
+                        rate: 1,
+                        pitch: 0.6,
+                        volume: 1
+                    },
+
+                    {
+                        text: '今日はブラウザだけで音声読み上げができるウェブスピーチエーピーアイの紹介をするよー',
+                        lang: 'ja-JP',
+                        rate: 1,
+                        pitch: 1,
+                        volume: 1
+                    },
+                    {
+                        text: '音声読み上げってブラウザだけでできるんだな。面白そうだぜ。',
+                        lang: 'ja-JP',
+                        rate: 1,
+                        pitch: 0.6,
+                        volume: 1
+                    },
+                    {
+                        text: 'それじゃあ、ゆっくりしていってね',
+                        lang: 'ja-JP',
+                        rate: 1,
+                        pitch: 1,
+                        volume: 1
+                    },
+                ]
+
+                this.defaultVoice = {
+                    text: '',
+                    lang: 'ja-JP',
+                    rate: 1,
+                    pitch: 1,
+                    volume: 1
+                }
+                this.voice.push(JSON.parse(JSON.stringify(this.defaultVoice)))
+            },
+            methods: {
+                inputSample() {
+                    this.$set(this, 'voice', this.sampleVoice)
+                },
+
+                play() {
+                    const vm = this;
+
+                    vm.$set(vm, 'playing', true)
+
+                    let count = vm.voice.length;
+
+                    vm.voice.forEach(function (elem, i) {
+
+                        const param = new SpeechSynthesisUtterance();
+                        param.text = elem.text;
+                        param.lang = elem.lang;
+                        param.rate = elem.rate;
+                        param.pitch = elem.pitch;
+                        param.volume = elem.volume;
+                        param.onend = function (event) {
+                            count--;
+                            if (count <= 0) {
+                                vm.$set(vm, 'playing', false)
+                            }
+                        }
+                        speechSynthesis.speak(param)
+                    })
+
+
+
+
+
+
+                },
+
+                up(index) {
+                    if (this.voice.length > 1 && index > 0) {
+
+                        this.voice.splice(index - 1, 2, this.voice[index], this.voice[index - 1]);
+                    }
+                },
+                down(index) {
+                    if (this.voice.length > 1 && index + 1 !== this.voice.length) {
+                        this.voice.splice(index, 2, this.voice[index + 1], this.voice[index]);
+                    }
+
+                },
+                del(index) {
+                    if (this.voice.length > 1) {
+                        this.voice.splice(index, 1);
+                    }
+                },
+                add() {
+                    this.voice.push(JSON.parse(JSON.stringify(this.defaultVoice)))
+                },
+
+            }
+        })
+    </script>
+</body>
+
+</html>
